@@ -110,6 +110,12 @@ SharpCompress library that Emby Server itself ships.
 
 Uninstall via *Dashboard → Advanced → Plugins*. The plugin's saved settings are removed as well.
 
+## Feedback
+
+Feedback and bug reports are welcome in the
+[Emby forum thread](https://emby.media/community/topic/149865-beta-okuzukey-metadata-plugin-for-bookscomicsmanga)
+or in the [Issues](../../issues).
+
 ## License
 
 [MIT](LICENSE) © SoliFlix
