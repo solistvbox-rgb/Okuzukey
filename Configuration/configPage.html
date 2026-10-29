@@ -1,0 +1,128 @@
+<meta charset="utf-8">
+<!-- Emby 4.10 only recognizes plugin pages with is="emby-scroller" + data-controller="__plugin/<name>";
+     the old data-role="page" pattern with an inline script crashes the dashboard router. -->
+<div is="emby-scroller"
+     class="view flex flex-direction-column scrollFrameY flex-grow"
+     data-horizontal="false"
+     data-forcescrollbar="true"
+     data-centerfocus="true"
+     data-bindheader="true"
+     data-controller="__plugin/okuzukeysettingsjs"
+     data-title="Okuzukey">
+
+    <div class="scrollSlider flex-grow flex-direction-column padded-left padded-left-page padded-right padded-top-page padded-bottom-page">
+    <form class="okuzukeyConfigForm auto-center">
+
+        <div class="verticalSection verticalSection-extrabottompadding">
+            <div class="sectionTitleContainer flex align-items-center">
+                <h2 class="sectionTitle">Okuzukey</h2>
+            </div>
+            <p>
+                Metadata plugin for books, comics, manga and light novels.
+            </p>
+            <p>
+                Okuzukey always reads <strong>local metadata first</strong>: NFO files, Calibre
+                <code>metadata.opf</code>, <code>ComicInfo.xml</code> embedded in
+                <code>.cbz</code>/<code>.cbr</code> comic archives, and local cover images. These
+                need no configuration and always take precedence.
+            </p>
+        </div>
+
+        <!-- Komga -->
+        <div class="verticalSection">
+            <h3>Komga</h3>
+            <div class="checkboxContainer checkboxContainer-withDescription">
+                <label>
+                    <input is="emby-checkbox" type="checkbox" id="EnableKomga" />
+                    <span>Enable Komga provider</span>
+                </label>
+                <div class="fieldDescription">
+                    Reads metadata (and, where you have manually corrected it in the Komga web
+                    UI, your own corrections) from your own, self-hosted Komga server. Disabled
+                    by default; requests are only ever sent to the server URL you enter below.
+                </div>
+            </div>
+            <div class="inputContainer">
+                <input is="emby-input" type="text" id="KomgaBaseUrl" label="Komga server URL" placeholder="https://komga.local:25600" />
+                <div class="fieldDescription">
+                    Without a trailing <code>/api</code> path, e.g. <code>https://komga.example.com:25600</code>
+                    or <code>http://192.168.1.10:25600</code>. Both HTTP and HTTPS are accepted -
+                    Komga is commonly run on a local network without a TLS certificate.
+                </div>
+            </div>
+            <div class="inputContainer">
+                <input is="emby-input" type="password" id="KomgaApiKey" label="Komga API key" />
+                <div class="fieldDescription">
+                    Generated in the Komga web UI (My Account → API Keys). Sent as the
+                    <code>X-API-Key</code> request header.
+                </div>
+            </div>
+            <div class="inputContainer">
+                <button is="emby-button" type="button" id="btnTestKomga" class="raised emby-button">
+                    <span>Test connection</span>
+                </button>
+                <div id="KomgaTestResult" class="fieldDescription" style="margin-top:.6em;font-weight:500;"></div>
+                <div class="fieldDescription">
+                    Tests the URL, API key and timeout as currently typed in the fields of this section (no need to save first).
+                </div>
+            </div>
+            <div class="inputContainer">
+                <input is="emby-input" type="number" id="KomgaTimeoutSeconds" label="Timeout (seconds)" min="1" max="300" step="1" />
+                <div class="fieldDescription">
+                    Timeout for a single request to the Komga server (1-300, default 30).
+                </div>
+            </div>
+            <div class="inputContainer">
+                <input is="emby-input" type="number" id="KomgaMaxConcurrentRequests" label="Max. concurrent requests" min="1" max="20" step="1" />
+                <div class="fieldDescription">
+                    How many Komga requests this plugin sends at the same time during a library
+                    scan (1-20). Higher values scan faster on a capable Komga server; keep this
+                    low (e.g. 1-2) for slow/weak hardware (a Raspberry Pi, say) so Komga isn't
+                    overloaded. Default is 4.
+                </div>
+            </div>
+            <div class="inputContainer">
+                <input is="emby-input" type="text" id="KomgaLibraryPathOnEmby" label="Library path as Emby sees it (optional)" placeholder="Z:\Books\ or /data/books/" />
+                <div class="fieldDescription">
+                    Only needed if Emby and Komga see the same library under different paths
+                    (e.g. a different drive letter or mount point). Used together with the field
+                    below to reliably match an Emby book to the correct Komga book by file path
+                    instead of by title. Leave both empty if Emby and Komga already see identical
+                    paths.
+                </div>
+            </div>
+            <div class="inputContainer">
+                <input is="emby-input" type="text" id="KomgaLibraryPathOnKomga" label="Same library path as Komga sees it (optional)" placeholder="/data/books/" />
+            </div>
+        </div>
+
+        <!-- Logging -->
+        <div class="verticalSection">
+            <h3>Logging</h3>
+            <div class="selectContainer">
+                <select is="emby-select" id="LoggingLevel" label="Log level">
+                    <option value="None">Nothing</option>
+                    <option value="ErrorsOnly">Errors only</option>
+                    <option value="Normal">Normal (errors and warnings)</option>
+                    <option value="Verbose">Verbose (everything, incl. one line per book)</option>
+                </select>
+                <div class="fieldDescription">
+                    How much this plugin writes to Emby's server log. "Verbose" logs a line for
+                    every book/comic a local provider looks at (NFO/OPF/ComicInfo.xml/cover
+                    readers, plus Komga if enabled), which can add several MB to the log on a
+                    large library - use it only while troubleshooting. "Normal" (default) still
+                    logs anything that needs attention (warnings, errors). "Nothing" disables even
+                    error logging for this plugin.
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                <span>Save</span>
+            </button>
+        </div>
+
+    </form>
+    </div>
+</div>

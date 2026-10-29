@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Emby Server loads plugins as netstandard2.0 assemblies. net8.0 is deliberately
+         NOT used, to avoid runtime binding problems when loading the plugin DLL in the
+         Emby server process. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Emby.Okuzukey</AssemblyName>
+    <RootNamespace>Emby.Okuzukey</RootNamespace>
+    <Product>Okuzukey</Product>
+    <Company>SoliFlix</Company>
+    <Description>Okuzukey – modular metadata plugin for books, comics, manga and light novels for Emby Server.</Description>
+    <Copyright>Copyright © SoliFlix</Copyright>
+
+    <Version>1.0.2.2</Version>
+    <AssemblyVersion>1.0.2.2</AssemblyVersion>
+    <FileVersion>1.0.2.2</FileVersion>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+
+    <!-- Prevents a .deps.json manifest from being generated - Emby's plugin loader has no use
+         for one (it is not a "dotnet run"-style host that resolves dependencies through it), so
+         this would just be dead weight in the plugin folder. -->
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+
+    <!-- Keeps the local build path out of the .pdb: PathMap rewrites the project directory to a
+         neutral placeholder in the compiled output. -->
+    <PathMap>$(MSBuildProjectDirectory)=/src/Emby.Okuzukey</PathMap>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Contains the base classes/interfaces for Emby server plugins
+         (BasePlugin, IHasWebPages, PluginPageInfo, BasePluginConfiguration,
+         IApplicationPaths, IXmlSerializer, ILogger, IHttpClient, Book entity, etc.).
+
+         Deliberately version 4.9.1.90 (instead of the newer package 4.10.0.24-beta2): a
+         netstandard2.0 DLL compiled against 4.9.1.90 also loads in newer Emby Server versions
+         (4.10, 4.11). If problems occur at runtime, switch here to "4.10.0.24-beta2"
+         (<PackageReference Include="MediaBrowser.Server.Core" Version="4.10.0.24-beta2" />). -->
+    <PackageReference Include="MediaBrowser.Server.Core" Version="4.9.1.90" ExcludeAssets="runtime" />
+
+    <!-- Used by ComicInfoProvider/EmbeddedCoverExtractor to read .cbr (RAR) comic/manga archives
+         (.cbz alone would only need the .NET BCL's System.IO.Compression, no extra dependency).
+         Deliberately pinned to exactly "0.33.0" - the same version Emby Server itself already
+         ships as system\SharpCompress.dll - and ExcludeAssets="runtime" so this plugin ships with
+         zero bundled DLLs of its own, relying entirely on the host's copy, at the cost of an
+         older SharpCompress API (RarArchive.Open(path), not the newer OpenArchive(path)) and a
+         known but here-inapplicable CVE (path traversal in WriteToDirectory(), which this plugin
+         never calls - archives are never extracted to disk). If Emby's own bundled version ever
+         changes, this pin must be updated to match exactly, or plugin loading fails. -->
+    <PackageReference Include="SharpCompress" Version="0.33.0" ExcludeAssets="runtime" />
+
+    <!-- Suppresses NuGet audit warning NU1902 for exactly this one SharpCompress advisory (the
+         WriteToDirectory() path traversal described above, which this plugin never calls).
+         Suppressed by advisory URL rather than by warning code, so any other/new advisory still
+         produces a warning. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-6c8g-7p36-r338" />
+
+    <!-- MediaBrowser.Model.Services.IResponse.OutputWriter is typed as
+         System.IO.Pipelines.PipeWriter (used by Api/KomgaImageApi.cs to write the proxied Komga
+         cover image bytes to the HTTP response); without a compile reference this fails with
+         CS0012, same reasoning as System.Memory below. Pinned to exactly "8.0.0" (assembly
+         version 8.0.0.0) rather than a newer package version: Emby Server runs on .NET 8 and
+         bundles exactly System.IO.Pipelines 8.0.0.0 itself, and a newer reference fails at
+         runtime with a FileNotFoundException - so it is excluded from output the same way. -->
+    <PackageReference Include="System.IO.Pipelines" Version="8.0.0" ExcludeAssets="runtime" />
+
+    <!-- MediaBrowser.Model/Controller reference System.Memory (ReadOnlyMemory<> in ILogger);
+         without a compile reference every ILogger call fails with CS0012. The Emby server
+         brings System.Memory itself, so the DLL is not copied to the output directory. -->
+    <PackageReference Include="System.Memory" Version="4.6.3" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The dashboard configuration page is delivered as an embedded resource
+         and referenced by Plugin.GetPages() via its fully qualified
+         resource name. -->
+    <EmbeddedResource Include="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\configPage.js" />
+
+    <!-- Plugin logo shown in the Emby dashboard's plugin catalog/list, served via
+         Plugin.GetThumbImage() (IHasThumbImage). -->
+    <EmbeddedResource Include="thumb.png" />
+  </ItemGroup>
+
+
+</Project>
